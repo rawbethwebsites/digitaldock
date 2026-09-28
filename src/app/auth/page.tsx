@@ -3,17 +3,37 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Terminal, Lock, Mail, User, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { useConvexAuth, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Terminal, Lock, Mail, User, ArrowRight, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
 
 export default function AuthPage() {
   const router = useRouter();
   const { signIn } = useAuthActions();
+  const { isAuthenticated } = useConvexAuth();
+  const selfPromote = useMutation(api.services.selfPromoteToAdmin);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [adminMessage, setAdminMessage] = useState<string | null>(null);
+
+  const handleBecomeAdmin = async () => {
+    setAdminMessage(null);
+    try {
+      const result = await selfPromote({});
+      if (result.success) {
+        setAdminMessage("✅ " + result.message + " Refreshing...");
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        setAdminMessage("❌ " + result.message);
+      }
+    } catch (err: any) {
+      setAdminMessage("❌ " + (err?.message || "Failed to become admin"));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +54,21 @@ export default function AuthPage() {
       router.push("/");
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Authentication failed. Please check your credentials.");
+      const msg = err?.message || "";
+      // Convex Auth throws raw internal error strings — translate to user-friendly messages
+      if (msg.includes("InvalidAccountId")) {
+        setError(isSignUp
+          ? "An account with this email already exists. Try signing in instead."
+          : "No account found with this email. Please sign up first.");
+      } else if (msg.includes("InvalidSecret")) {
+        setError("Incorrect password. Please try again.");
+      } else if (msg.includes("TooManyFailedAttempts")) {
+        setError("Too many failed attempts. Please wait a few minutes and try again.");
+      } else if (msg.includes("Invalid password")) {
+        setError("Password must be at least 8 characters long.");
+      } else {
+        setError(msg || "Authentication failed. Please check your credentials.");
+      }
     } finally {
       setLoading(false);
     }
@@ -171,6 +205,25 @@ export default function AuthPage() {
             </p>
           )}
         </div>
+
+        {/* Become Admin button — only visible when logged in and no admin exists yet */}
+        {isAuthenticated && (
+          <div className="mt-4 border-t border-zinc-800 pt-4">
+            <button
+              onClick={handleBecomeAdmin}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-800/40 bg-emerald-950/30 py-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-950/50 transition-colors"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Become Admin (First Setup)
+            </button>
+            {adminMessage && (
+              <p className="mt-2 text-center text-xs text-zinc-400">{adminMessage}</p>
+            )}
+            <p className="mt-2 text-center text-[10px] text-zinc-600">
+              Only works if no admin exists yet. Once an admin is set, this button disappears.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

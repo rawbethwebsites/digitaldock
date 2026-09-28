@@ -35,8 +35,11 @@ export default defineSchema({
 
   // -------------------------------------------------------------
   // Users & Auth (Extended from Convex Auth)
+  // The auth library's users table must be extended, not replaced.
+  // Keep all original authTables fields + indexes, add custom ones.
   // -------------------------------------------------------------
   users: defineTable({
+    // Original authTables fields (do not remove)
     name: v.optional(v.string()),
     image: v.optional(v.string()),
     email: v.optional(v.string()),
@@ -48,8 +51,10 @@ export default defineSchema({
     displayName: v.optional(v.string()),
     role: v.optional(userRoleValidator), // default customer
     status: v.optional(v.union(v.literal("active"), v.literal("suspended"))),
+    updatedAt: v.optional(v.number()),
   })
     .index("email", ["email"])
+    .index("phone", ["phone"]) // Required by authTables — do not remove
     .index("by_role", ["role"]),
 
   // -------------------------------------------------------------

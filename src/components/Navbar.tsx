@@ -36,7 +36,15 @@ export function Navbar() {
                 pathname === "/" ? "text-zinc-100" : ""
               }`}
             >
-              Catalogue
+              Home
+            </Link>
+            <Link
+              href="/market"
+              className={`hover:text-zinc-100 transition-colors ${
+                pathname === "/market" ? "text-zinc-100" : ""
+              }`}
+            >
+              Marketplace
             </Link>
             {isAuthenticated && (
               <Link
