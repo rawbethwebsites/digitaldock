@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -35,7 +35,7 @@ function expectedDelivery(createdAt: number, turnaroundDays: number, paymentStat
   return deliveryDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function OrdersPage() {
+function OrdersContent() {
   const searchParams = useSearchParams();
   const newOrderRef = searchParams.get("new");
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -176,5 +176,17 @@ export default function OrdersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="mx-auto max-w-7xl px-4 py-20 text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent mx-auto" />
+      </div>
+    }>
+      <OrdersContent />
+    </Suspense>
   );
 }
