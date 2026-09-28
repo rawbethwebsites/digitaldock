@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as bootstrap from "../bootstrap.js";
 import type * as cleanup from "../cleanup.js";
 import type * as http from "../http.js";
 import type * as orders from "../orders.js";
@@ -24,6 +25,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  bootstrap: typeof bootstrap;
   cleanup: typeof cleanup;
   http: typeof http;
   orders: typeof orders;
